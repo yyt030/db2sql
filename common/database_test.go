@@ -15,7 +15,7 @@ func TestGetRandomKeyValue(t *testing.T) {
 		panic(err)
 	}
 	defer db.Close()
-	ms := GetMeta(db, "DB2INST1", "TEST")
+	ms := GetMeta(CONNSTR, "DB2INST1", "TEST")
 
 	m := GetRandomKeyValue(db, ms, GetCount(db, ms))
 	log.Printf("%+v", m)

@@ -2,3 +2,5 @@ github.com/bxcodec/faker/v3 v3.1.0 h1:VCCPusvvk1My6RjWFnqVbh6EdHDqjWmrHJCHduUksV
 github.com/bxcodec/faker/v3 v3.1.0/go.mod h1:gF31YgnMSMKgkvl+fyEo1xuSMbEuieyqfeslGYFjneM=
 github.com/ibmdb/go_ibm_db v0.0.0-20190510111359-65246ebaf88e h1:Ckk/4ew2wwpi6MYWaT5Es+QP6UZOSWcp3TY6zYqpVAA=
 github.com/ibmdb/go_ibm_db v0.0.0-20190510111359-65246ebaf88e/go.mod h1:nl5aUh1IzBVExcqYXaZLApaq8RUvTEph3VP49UTmEvg=
+github.com/urfave/cli v1.20.0 h1:fDqGv3UG/4jbVl/QkFwEdddtEDjh/5Ov6X+0B/3bPaw=
+github.com/urfave/cli v1.20.0/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijbERA=

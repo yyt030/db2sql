@@ -9,6 +9,12 @@ import (
 	"github.com/bxcodec/faker/v3"
 )
 
+const (
+	INSERT_MASK = 0x01
+	UPDATE_MASK = 0x02
+	DELETE_MASK = 0x04
+)
+
 func Insert(m MetaData) (s string) {
 	s += fmt.Sprintf("insert into %s.%s(", m.TabSchema, m.TabName)
 	for i, v := range m.Cols {

@@ -30,6 +30,7 @@ type Col struct {
 const CONNSTR = "HOSTNAME=192.168.31.128;DATABASE=TESTDB;PORT=50000;UID=db2inst1;PWD=db2inst1"
 
 func NewDB(dsn string) (db *sql.DB, err error) {
+	// user:passwd@ip:port/dbname
 	if db, err = sql.Open("go_ibm_db", dsn); err != nil {
 		log.Println(err)
 		return nil, err
@@ -42,7 +43,13 @@ func NewDB(dsn string) (db *sql.DB, err error) {
 	return
 }
 
-func GetMeta(db *sql.DB, tabschema, tabname string) (ms MetaData) {
+func GetMeta(dsn, tabschema, tabname string) (ms MetaData) {
+	db, err := NewDB(dsn)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
 	sqlstr := `select colname, colno, typename, length, scale, nulls, keyseq from syscat.columns where tabschema='%s' and tabname='%s' order by colno`
 	s := fmt.Sprintf(sqlstr, tabschema, tabname)
 	rows, err := db.Query(s)
@@ -50,12 +57,12 @@ func GetMeta(db *sql.DB, tabschema, tabname string) (ms MetaData) {
 		panic(err)
 	}
 	defer rows.Close()
+
 	for rows.Next() {
 		var c Col
 		if err := rows.Scan(&c.ColName, &c.ColNo, &c.TypeName, &c.Length, &c.Scale, &c.Nulls, &c.KeySeq); err != nil {
 			panic(err)
 		}
-
 		ms.Cols = append(ms.Cols, c)
 		if c.KeySeq.Valid {
 			ms.KeyCols = append(ms.KeyCols, c.ColName)
@@ -106,7 +113,13 @@ func GetRandomKeyValue(db *sql.DB, ms MetaData, limit int) map[string]interface{
 	return m
 }
 
-func GetCount(db *sql.DB, ms MetaData) (n int) {
+func GetCount(dsn string, ms MetaData) (n int) {
+	db, err := NewDB(dsn)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
 	s := fmt.Sprintf(`select count(1) from %s.%s with ur`, ms.TabSchema, ms.TabName)
 	rows, err := db.Query(s)
 	if err != nil {
