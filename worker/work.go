@@ -35,6 +35,7 @@ func work(c Config) {
 	}
 	defer tx.Rollback()
 
+	var commitNum int
 	for i := 0; i < c.Number/c.Conc; i++ {
 		var s string
 		switch {
@@ -57,27 +58,31 @@ func work(c Config) {
 		if err != nil {
 			panic(err)
 		}
-		log.Println(">>>", affected)
+		log.Printf("afected:%d, sql:%s", affected, s)
 
-		if rand.Float64() < c.Rate {
-			if err := tx.Rollback(); err != nil {
-				panic(err)
+		if commitNum >= rand.Intn(c.TranNum) {
+			if rand.Float64() < c.Rate {
+				if err := tx.Rollback(); err != nil {
+					panic(err)
+				}
+				log.Println("--------------------------------- rollback")
+				tx, err = db.Begin()
+				if err != nil {
+					panic(err)
+				}
+			} else {
+				if err := tx.Commit(); err != nil {
+					panic(err)
+				}
+				log.Println("--------------------------------- commit")
+				tx, err = db.Begin()
+				if err != nil {
+					panic(err)
+				}
 			}
-			log.Println("rollback")
-			tx, err = db.Begin()
-			if err != nil {
-				panic(err)
-			}
+			commitNum = 0
 		} else {
-			if err := tx.Commit(); err != nil {
-				panic(err)
-			}
-			log.Println("commit")
-			tx, err = db.Begin()
-			if err != nil {
-				panic(err)
-			}
+			commitNum++
 		}
-
 	}
 }
