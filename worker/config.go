@@ -12,7 +12,7 @@ type Config struct {
 	Number    int
 	TranNum   int
 	Sql       int
-	CurrCount int
+	CurrCount int32
 	Rate      float64
 	MS        common.MetaData
 }

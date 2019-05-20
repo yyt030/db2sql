@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 	"math/rand"
 	"os"
 	"regexp"
@@ -13,6 +14,10 @@ import (
 	"db2sql/worker"
 	"github.com/urfave/cli"
 )
+
+func init() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+}
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
@@ -97,7 +102,7 @@ func main() {
 
 		conf.CurrCount = common.GetCount(conf.Dsn, conf.MS)
 
-		worker.Run(conf)
+		worker.Run(&conf)
 		return nil
 	}
 

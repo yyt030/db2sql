@@ -4,25 +4,26 @@ import (
 	"log"
 	"math/rand"
 	"sync"
+	"sync/atomic"
 
 	"db2sql/common"
 )
 
-func Run(c Config) {
+func Run(c *Config) {
 	var wg sync.WaitGroup
 	for i := 0; i < c.Conc; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-
 			work(c)
 		}()
 	}
 
 	wg.Wait()
+	log.Println(">>>", c.CurrCount)
 }
 
-func work(c Config) {
+func work(c *Config) {
 	db, err := common.NewDB(c.Dsn)
 	if err != nil {
 		panic(err)
@@ -36,28 +37,53 @@ func work(c Config) {
 	defer tx.Rollback()
 
 	var commitNum int
+	var num int32
 	for i := 0; i < c.Number/c.Conc; i++ {
+		var optList []int
+		if c.Sql&common.INSERT_MASK == common.INSERT_MASK {
+			optList = append(optList, common.INSERT_MASK)
+		}
+		if c.Sql&common.UPDATE_MASK == common.UPDATE_MASK {
+			optList = append(optList, common.UPDATE_MASK)
+		}
+		if c.Sql&common.DELETE_MASK == common.DELETE_MASK {
+			optList = append(optList, common.DELETE_MASK)
+		}
+
 		var s string
-		switch {
-		case c.Sql&common.INSERT_MASK == common.INSERT_MASK:
+
+		optListIndex := rand.Intn(len(optList))
+
+		switch optList[optListIndex] {
+		case common.INSERT_MASK:
 			s = common.Insert(c.MS)
-		case c.Sql&common.UPDATE_MASK == common.UPDATE_MASK:
-			kv := common.GetRandomKeyValue(db, c.MS, c.CurrCount)
+		case common.UPDATE_MASK:
+			kv := common.GetRandomKeyValue(db, c.MS, atomic.LoadInt32(&c.CurrCount))
 			s = common.Update(c.MS, kv)
-		case c.Sql&common.DELETE_MASK == common.DELETE_MASK:
-			kv := common.GetRandomKeyValue(db, c.MS, c.CurrCount)
+		case common.DELETE_MASK:
+			kv := common.GetRandomKeyValue(db, c.MS, atomic.LoadInt32(&c.CurrCount))
 			s = common.Delete(c.MS, kv)
 		default:
 			panic(err)
 		}
 		result, err := tx.Exec(s)
 		if err != nil {
-			panic(err)
+			log.Println("ERROR", s, err)
+			continue
 		}
 		affected, err := result.RowsAffected()
 		if err != nil {
-			panic(err)
+			continue
+		} else {
+			switch optList[optListIndex] {
+			case common.INSERT_MASK:
+				num += int32(affected)
+			case common.DELETE_MASK:
+				num -= int32(affected)
+			}
+
 		}
+
 		log.Printf("afected:%d, sql:%s", affected, s)
 
 		if commitNum >= rand.Intn(c.TranNum) {
@@ -65,6 +91,7 @@ func work(c Config) {
 				if err := tx.Rollback(); err != nil {
 					panic(err)
 				}
+				num = 0
 				log.Println("--------------------------------- rollback")
 				tx, err = db.Begin()
 				if err != nil {
@@ -74,7 +101,10 @@ func work(c Config) {
 				if err := tx.Commit(); err != nil {
 					panic(err)
 				}
+				atomic.AddInt32(&c.CurrCount, num)
+				num = 0
 				log.Println("--------------------------------- commit")
+
 				tx, err = db.Begin()
 				if err != nil {
 					panic(err)

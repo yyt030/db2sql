@@ -77,11 +77,15 @@ func GetMeta(dsn, tabschema, tabname string) (ms MetaData) {
 	return
 }
 
-func GetRandomKeyValue(db *sql.DB, ms MetaData, limit int) map[string]interface{} {
-	s := fmt.Sprintf("select %s from %s.%s limit %d,1", strings.Join(ms.KeyCols, ","), ms.TabSchema, ms.TabName, rand.Intn(limit))
+func GetRandomKeyValue(db *sql.DB, ms MetaData, limit int32) map[string]interface{} {
+	if limit <= 0 {
+		return nil
+	}
+	s := fmt.Sprintf("select %s from %s.%s limit %d,1", strings.Join(ms.KeyCols, ","), ms.TabSchema, ms.TabName, rand.Intn(int(limit)))
 	rows, err := db.Query(s)
 	if err != nil {
-		panic(err)
+		log.Printf("error:", err)
+		return nil
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
@@ -90,7 +94,6 @@ func GetRandomKeyValue(db *sql.DB, ms MetaData, limit int) map[string]interface{
 	}()
 
 	m := make(map[string]interface{})
-
 	for rows.Next() {
 		values := make([]interface{}, len(ms.KeyCols))
 		valuesPtr := make([]interface{}, len(ms.KeyCols))
@@ -113,7 +116,7 @@ func GetRandomKeyValue(db *sql.DB, ms MetaData, limit int) map[string]interface{
 	return m
 }
 
-func GetCount(dsn string, ms MetaData) (n int) {
+func GetCount(dsn string, ms MetaData) (n int32) {
 	db, err := NewDB(dsn)
 	if err != nil {
 		panic(err)

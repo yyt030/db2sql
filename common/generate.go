@@ -59,6 +59,9 @@ func Insert(m MetaData) (s string) {
 }
 
 func Update(m MetaData, kv map[string]interface{}) (s string) {
+	if kv == nil || len(kv) == 0 {
+		return ""
+	}
 	s += fmt.Sprintf("update %s.%s set ", m.TabSchema, m.TabName)
 	for i, v := range m.Cols {
 		if i > 0 {
@@ -73,7 +76,7 @@ func Update(m MetaData, kv map[string]interface{}) (s string) {
 				s += fmt.Sprintf("%s='%s'", v.ColName, faker.UUIDDigit())
 			}
 		case "INTEGER":
-			s += fmt.Sprintf("%s=%#v", v.ColName, rand.Intn(10))
+			s += fmt.Sprintf("%s=%#v", v.ColName, rand.Int31())
 		case "TIMESTAMP":
 			s += fmt.Sprintf("%s='%s'", v.ColName, faker.Timestamp())
 		case "DECIMAL":
@@ -95,6 +98,9 @@ func Update(m MetaData, kv map[string]interface{}) (s string) {
 }
 
 func Delete(m MetaData, kv map[string]interface{}) (s string) {
+	if kv == nil || len(kv) == 0 {
+		return ""
+	}
 	s += fmt.Sprintf("delete from %s.%s where ", m.TabSchema, m.TabName)
 
 	i := 0
