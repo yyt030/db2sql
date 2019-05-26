@@ -99,8 +99,6 @@ func main() {
 			conf.MS = append(conf.MS, ms)
 		}
 
-		fmt.Printf("%+v", conf.MS)
-
 		// Sql type
 		if conf.Sql > 7 && conf.Sql < 1 {
 			return errors.New("sql type is wrong")
