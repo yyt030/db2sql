@@ -1,3 +1,4 @@
+```
 NAME:
    main.exe - A new cli application
 
@@ -20,5 +21,5 @@ GLOBAL OPTIONS:
    --rate value, -r value    the rate of rollback. e.g.: 0.5-> half of rollback (default: 0)
    --help, -h                show help
    --version, -v             print the version
-
-error: pls input dsn or table
+   
+```
