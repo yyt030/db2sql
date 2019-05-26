@@ -13,6 +13,7 @@ import (
 type MetaData struct {
 	TabSchema string
 	TabName   string
+	CurrCount int32
 	Cols      []Col
 	KeyCols   []string
 }

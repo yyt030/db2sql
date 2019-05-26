@@ -5,14 +5,11 @@ import (
 )
 
 type Config struct {
-	Dsn       string
-	TabSchema string
-	TabName   string
-	Conc      int
-	Number    int
-	TranNum   int
-	Sql       int
-	CurrCount int32
-	Rate      float64
-	MS        common.MetaData
+	Dsn     string
+	Conc    int
+	Number  int
+	TranNum int
+	Sql     int
+	Rate    float64
+	MS      []common.MetaData
 }

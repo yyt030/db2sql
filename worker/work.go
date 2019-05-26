@@ -20,7 +20,6 @@ func Run(c *Config) {
 	}
 
 	wg.Wait()
-	log.Println(">>>", c.CurrCount)
 }
 
 func work(c *Config) {
@@ -53,16 +52,17 @@ func work(c *Config) {
 		var s string
 
 		optListIndex := rand.Intn(len(optList))
+		ms := c.MS[rand.Intn(len(c.MS))]
 
 		switch optList[optListIndex] {
 		case common.INSERT_MASK:
-			s = common.Insert(c.MS)
+			s = common.Insert(ms)
 		case common.UPDATE_MASK:
-			kv := common.GetRandomKeyValue(db, c.MS, atomic.LoadInt32(&c.CurrCount))
-			s = common.Update(c.MS, kv)
+			kv := common.GetRandomKeyValue(db, ms, atomic.LoadInt32(&ms.CurrCount))
+			s = common.Update(ms, kv)
 		case common.DELETE_MASK:
-			kv := common.GetRandomKeyValue(db, c.MS, atomic.LoadInt32(&c.CurrCount))
-			s = common.Delete(c.MS, kv)
+			kv := common.GetRandomKeyValue(db, ms, atomic.LoadInt32(&ms.CurrCount))
+			s = common.Delete(ms, kv)
 		default:
 			panic(err)
 		}
@@ -101,7 +101,7 @@ func work(c *Config) {
 				if err := tx.Commit(); err != nil {
 					panic(err)
 				}
-				atomic.AddInt32(&c.CurrCount, num)
+				atomic.AddInt32(&ms.CurrCount, num)
 				num = 0
 				log.Println("--------------------------------- commit")
 

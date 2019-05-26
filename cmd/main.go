@@ -30,7 +30,7 @@ func main() {
 			Name:  "dsn, d",
 			Usage: "the DSN to connect, e.g.: user:passwd@ip:port/dbname",
 		},
-		cli.StringFlag{
+		cli.StringSliceFlag{
 			Name:  "table, t",
 			Usage: "table name to operate, e.g.: schema.table",
 		},
@@ -82,25 +82,29 @@ func main() {
 		conf.Dsn = fmt.Sprintf("HOSTNAME=%s;DATABASE=%s;PORT=%s;UID=%s;PWD=%s", dsnStr[2], dsnStr[4], dsnStr[3], dsnStr[0], dsnStr[1])
 
 		// schema.table
-		tabStr := strings.Split(ctx.String("table"), ".")
-		if len(tabStr) != 2 {
-			cli.ShowAppHelp(ctx)
-			return errors.New("table format is failed")
-		}
-		conf.TabSchema, conf.TabName = strings.ToUpper(tabStr[0]), strings.ToUpper(tabStr[1])
+		for _, v := range ctx.StringSlice("table") {
+			tabStr := strings.Split(v, ".")
+			if len(tabStr) != 2 {
+				cli.ShowAppHelp(ctx)
+				return errors.New("table format is failed")
+			}
+			tabSchema, tabName := strings.ToUpper(tabStr[0]), strings.ToUpper(tabStr[1])
+			// metadata
+			ms := common.GetMeta(conf.Dsn, tabSchema, tabName)
+			if len(ms.Cols) == 0 {
+				return errors.New("can't find the table, Do you input right")
+			}
+			ms.CurrCount = common.GetCount(conf.Dsn, ms)
 
-		// metadata
-		conf.MS = common.GetMeta(conf.Dsn, conf.TabSchema, conf.TabName)
-		if len(conf.MS.Cols) == 0 {
-			return errors.New("can't find the table, Do you input right")
+			conf.MS = append(conf.MS, ms)
 		}
+
+		fmt.Printf("%+v", conf.MS)
 
 		// Sql type
 		if conf.Sql > 7 && conf.Sql < 1 {
 			return errors.New("sql type is wrong")
 		}
-
-		conf.CurrCount = common.GetCount(conf.Dsn, conf.MS)
 
 		worker.Run(&conf)
 		return nil
